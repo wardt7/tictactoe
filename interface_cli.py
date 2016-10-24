@@ -1,3 +1,58 @@
+def main_menu():
+        menu_on = True
+        while menu_on:
+                print("Hello, welcome to the Tic Tac Toe game. What would you like to do?")
+                print("A = play a local game")
+                print("B = Exit")
+                choice = input("Enter your choice")
+                if choice == "A":
+                        game_on = True
+                        board = [["-","-","-"],["-","-","-"],["-","-","-"]]
+                        player_one = True
+                        while game_on:
+                                print(board[0])
+                                print(board[1])
+                                print(board[2])
+                                if player_one:
+                                        print("Player one, make a move")
+                                else:
+                                        print("Player two, make a move")
+                                choice = input("Enter a number from 1 to 9")
+                                if choice == "1":
+                                        selection = board[2][0]
+                                elif choice == "2":
+                                        selection = board[2][1]
+                                elif choice == "3":
+                                        selection = board[2][2]
+                                elif choice == "4":
+                                        selection = board[1][0]
+                                elif choice == "5":
+                                        selection = board[1][1]
+                                elif choice == "6":
+                                        selection = board[1][2]
+                                elif choice == "7":
+                                        selection = board[0][0]
+                                elif choice == "8":
+                                        selection = board[0][1]
+                                elif choice == "9":
+                                        selection = board[0][2]
+                                else:
+                                        print("That was invalid")
+                                        continue
+                                if selection == "-":
+                                        pass
+                                else:
+                                        print("Invalid move, try again")
+                                        continue
+                                        
+                elif choice == "B":
+                        print("Thanks for playing")
+                        menu_on = False
+                else:
+                        print("That was an invalid choice, try again")
+        exit()
+                        
+
 def win_check(board):
         """Function to check if win condition reached"""
         for i in range(3):
