@@ -1,0 +1,150 @@
+def player1choice():
+
+        if Play1 == '1':
+            if alist[0] == 'x' or alist[0]=='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[0] = Player1
+                printBoard(alist)
+                
+        if Play1 == '2':
+            if alist[1] == 'x' or alist[1] =='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[1] = Player1
+                printBoard( alist )
+                
+        if Play1 == '3':
+            if alist[2] == 'x' or alist[2] == 'o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[2] = Player1
+                printBoard(alist)
+
+        if Play1 == '4':
+            if alist[3] == 'x' or alist[3] == 'o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[3] = Player1
+                printBoard( alist )
+
+        if Play1 == '5':
+            if alist[4] == 'x' or alist[4] =='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[4] = Player1
+                printBoard( alist )
+                
+        if Play1 == '6':
+            if alist[5] == 'x' or alist[5] == 'o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[5] = Player1
+                printBoard( alist )
+
+        if Play1 == '7':
+            if alist[6] == 'x' or alist[6] =='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[6] = Player1
+                printBoard( alist )
+
+        if Play1 == '8':
+            if alist[7] == 'x' or alist[7] =='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[7] = Player1
+                printBoard( alist )
+                
+        if Play1 == '9':
+            if alist[8] == 'x' or alist[8] =='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[8] = Player1
+                printBoard( alist )  
+
+    """computer() is the code that will check if space is full
+    when computer makes a choice"""
+    def computer():
+        if AI == '1':
+            if alist[0] == 'x' or alist[0]=='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[0] = comp
+                printBoard(alist)
+
+
+        if AI == '2':
+            if alist[1] == 'x' or alist[0]=='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[1] = comp
+                printBoard(alist)
+
+        if AI == '3':
+            if alist[2] == 'x' or alist[0]=='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[2] = comp
+                printBoard(alist)
+
+        if AI == '4':
+            if alist[3] == 'x' or alist[0]=='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[3] = comp
+                printBoard(alist)
+
+        if AI == '5':
+            if alist[4] == 'x' or alist[0]=='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[4] = comp
+                printBoard(alist)
+
+
+        if AI == '6':
+            if alist[5] == 'x' or alist[0]=='o':
+                print("taken")
+            else:
+                alist[5] = comp
+                printBoard(alist)
+
+        if AI == '7':
+            if alist[6] == 'x' or alist[0]=='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[6] = comp
+                printBoard(alist)
+
+        if AI == '8':
+            if alist[7] == 'x' or alist[0]=='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[7] = comp
+                printBoard(alist)
+
+
+        if AI == '9':
+            if alist[8] == 'x' or alist[0]=='o':
+                print("taken")
+                playervscomputer()
+            else:
+                alist[8] = comp
+                printBoard(alist)
