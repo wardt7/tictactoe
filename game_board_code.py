@@ -125,7 +125,6 @@ class gameBoard:
                                 except IndexError:
                                     # The index we passed was too large (looking for something outside the board
                                     pass
-        # No winner; dash returned
         return rating
 
 
