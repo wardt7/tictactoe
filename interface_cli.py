@@ -1,5 +1,6 @@
 # This function is used in order to delay AI decisions in order to make them appear "human"
 from time import sleep
+import pickle, socket
 
 
 def main_menu():
@@ -11,7 +12,8 @@ def main_menu():
                 print("Hello, welcome to the Tic Tac Toe game. What would you like to do?")
                 print("A = Play a local game")
                 print("B = Play a game against an AI")
-                print("C = Exit")
+                print("C = Play an online game")
+                print("D = Exit")
                 choice = input("Enter your choice\n")
                 if choice == "A":
                         local_game()
@@ -25,6 +27,9 @@ def main_menu():
                         else:
                                 continue
                 elif choice == "C":
+                        game = client()
+                        game.online_game()
+                elif choice == "D":
                         print("Thanks for playing")
                         menu_on = False
                 else:
@@ -286,6 +291,7 @@ def show_instructions():
     print("Have fun playing!")
 
 def XorOPlayer():
+    """Function for selecting what piece to play as in local games. Has no parameters; outputs True if player 1 is X, otherwise outputs False """
         while True:
                 player1 = input("---|Player 1/Human, would you like to be X or O|--: ")
                 if player1 =='X':
@@ -294,5 +300,144 @@ def XorOPlayer():
                         return False
                 else:
                         print("That was an invalid input, try again.")
-                
+
+class client:
+    """Class for creating client objects for connecting to a Raspberry Pi server to play games and join a chatroom"""
+    def __init__(self):
+        """Function for initialising the client."""
+        self.port = 12345
+        self.c = socket.socket()
+        self.c.connect(("169.254.247.73",self.port))
+        # self.master_dict is used to transfer variables and the data held in them between the client and the server.
+        self.master_dict = {}
+        self.board = [["-","-","-"],["-","-","-"],["-","-","-"]]
+        self.player_turn = None
+        self.player_piece = None
+        self.game_no = None
+        self.win = None
+        self.disconnected = None
+        self.turns = 0
+
+    def recv_data(self):
+        """Function for receiving data from the Raspberry Pi server. Decodes a dictionary and loads the values held in their respective variables.
+        Has no parameters (except for self); Outputs False if the server disconnects, otherwise outputs None."""
+        # We clean the client's held dictionary in order to remove old data in the dictionary
+        self.master_dict = {}
+        raw_recv = self.c.recv(1024)
+        if not raw_recv:
+            return False
+        else:
+            # Decode the received message to obtain a dictionary; load the values into their respective variables
+            self.master_dict = pickle.loads(raw_recv)
+            if "board" in self.master_dict:
+                self.board = self.master_dict["board"]
+            if "player_turn" in self.master_dict:
+                self.player_turn = self.master_dict["player_turn"]
+            if "game_no" in self.master_dict:
+                self.game_no = self.master_dict["game_no"]
+            if "turns" in self.master_dict:
+                self.turns = self.master_dict["turns"]
+            if "player_piece" in self.master_dict:
+                self.player_piece = self.master_dict["player_piece"]
+            if "win" in self.master_dict:
+                self.win = self.master_dict["win"]
+            if "disconnected" in self.master_dict:
+                self.disconnected = self.master_dict["disconnected"]
+
+    def send_data(self):
+        """Function for sending self.master_dict to the server. Has no parameters (except for self); outputs None at all times."""
+        # Note that we use protocol 0 in order to guarantee compatibility (errors appeared when the server client was on linux). This
+        # can be changed in order to message size, but would require both the client and server code altering to accomodate.
+        msgbytes = pickle.dumps(self.master_dict, protocol=0)
+        self.c.send(msgbytes)
+
+    def end_connection(self):
+        """Function for cleanly shutting down the client connection when someone disconnects. Has no parameters (except for self); outputs None at all times"""
+        self.c.shutdown(1)
+        self.c.close()
+
+    def online_game(self):
+        """Function for starting an online game with a random player. Has no parameters (except for self); returns an appropriate print statement when a game
+        ends."""
+        print("Connecting you to a random online game")
+        # The value of self.game_no is None; the server recognises this as a request to join a game, and allocates a game to the connection
+        self.master_dict["game_no"] = self.game_no
+        self.send_data()
+        while True:
+            # Obtain the latest data from the server at the start of each loop, then display the new board to the user
+            result = self.recv_data()
+            print("You are in game: {}. Your piece is: {}".format(self.game_no, self.player_piece))
+            print(self.board[0])
+            print(self.board[1])
+            print(self.board[2])
+            if result == False or self.disconnected:
+                # Note: result == False is True when the server disconnects; self.disconnected is True when the opponent disconnects
+                self.end_connection()
+                return print("You or your opponent disconnected from the server. Returning you to the main menu")
+            elif self.win is not None:
+                # A final result has been determined, end the game
+                self.end_connection()
+                if self.win != "-":
+                    return print("{} is the winner! Returning you to the main menu.".format(self.win))
+                else:
+                    return print("It's a draw! Returning you to the main menu.")
+            elif self.player_turn != self.player_piece:
+                print("It's the other player's turn!")
+            else:
+                print("It's your turn!")
+                selecting = True
+                while selecting:
+                    choice = input("Enter a number between 1 and 9\n")
+                    if choice == "1":
+                            selection = self.board[2][0]
+                    elif choice == "2":
+                            selection = self.board[2][1]
+                    elif choice == "3":
+                            selection = self.board[2][2]
+                    elif choice == "4":
+                            selection = self.board[1][0]
+                    elif choice == "5":
+                            selection = self.board[1][1]
+                    elif choice == "6":
+                            selection = self.board[1][2]
+                    elif choice == "7":
+                            selection = self.board[0][0]
+                    elif choice == "8":
+                            selection = self.board[0][1]
+                    elif choice == "9":
+                            selection = self.board[0][2]
+                    else:
+                            print("That was invalid")
+                            continue
+                    if selection == "-":
+                        if choice == "1":
+                                self.board[2][0] = self.player_piece
+                        elif choice == "2":
+                                self.board[2][1] = self.player_piece
+                        elif choice == "3":
+                                self.board[2][2] = self.player_piece
+                        elif choice == "4":
+                                self.board[1][0] = self.player_piece
+                        elif choice == "5":
+                                self.board[1][1] = self.player_piece
+                        elif choice == "6":
+                                self.board[1][2] = self.player_piece
+                        elif choice == "7":
+                                self.board[0][0] = self.player_piece
+                        elif choice == "8":
+                                self.board[0][1] = self.player_piece
+                        else:
+                                self.board[0][2] = self.player_piece
+                        selecting = False
+                    else:
+                            print("Invalid move, try again")
+                            continue
+                # Load in the newly adjusted variables into the master dictionary and send to the server
+                self.master_dict["board"] = self.board
+                self.master_dict["game_no"] = self.game_no
+                self.master_dict["player_turn"] = self.player_turn
+                self.master_dict["turns"] = self.turns+1
+                self.send_data()
+                continue
+
 main_menu()
