@@ -1,6 +1,6 @@
 # This function is used in order to delay AI decisions in order to make them appear "human"
 from time import sleep
-import pickle, socket
+import pickle, socket, select
 
 
 def main_menu():
@@ -13,7 +13,8 @@ def main_menu():
                 print("A = Play a local game")
                 print("B = Play a game against an AI")
                 print("C = Play an online game")
-                print("D = Exit")
+                print("D = Join the online chat room")
+                print("E = Exit")
                 choice = input("Enter your choice\n")
                 if choice == "A":
                         local_game()
@@ -27,9 +28,12 @@ def main_menu():
                         else:
                                 continue
                 elif choice == "C":
-                        game = client()
+                        game = Game()
                         game.online_game()
                 elif choice == "D":
+                        chat = Chat()
+                        chat.online_chatroom()
+                elif choice == "E":
                         print("Thanks for playing")
                         menu_on = False
                 else:
@@ -41,7 +45,7 @@ def local_game(ai=None):
         until a winner is found or until 9 turns have elapsed (as after 9 turns there
         are no more moves available). Has 1 parameter to determine if AI is used. Always returns None."""
         board = [["-","-","-"],["-","-","-"],["-","-","-"]]
-        player_one = True
+        player_one = ai is None
         turns = 0
         show_instructions()
         # Asks the player (1) to select what piece they want to use, X or O
@@ -292,38 +296,42 @@ def show_instructions():
 
 def XorOPlayer():
     """Function for selecting what piece to play as in local games. Has no parameters; outputs True if player 1 is X, otherwise outputs False """
-        while True:
-                player1 = input("---|Player 1/Human, would you like to be X or O|--: ")
-                if player1 =='X':
-                        return True
-                elif player1 == 'O':
-                        return False
-                else:
-                        print("That was an invalid input, try again.")
+    while True:
+        player1 = input("---|Player 1/Human, would you like to be X or O|--: ")
+        if player1 =='X':
+                return True
+        elif player1 == 'O':
+                return False
+        else:
+                print("That was an invalid input, try again.")
 
-class client:
+# The following code is based off a file called "lab_getting_started_client.py",
+# which is available at https://github.com/covcom/ECU177_sockets
+class Client:
     """Class for creating client objects for connecting to a Raspberry Pi server to play games and join a chatroom"""
     def __init__(self):
         """Function for initialising the client."""
-        self.port = 12345
+        self.__port = 12345
         self.c = socket.socket()
-        self.c.connect(("169.254.247.73",self.port))
+        self.c.connect(("169.254.247.73",self.__port))
         # self.master_dict is used to transfer variables and the data held in them between the client and the server.
         self.master_dict = {}
-        self.board = [["-","-","-"],["-","-","-"],["-","-","-"]]
-        self.player_turn = None
-        self.player_piece = None
-        self.game_no = None
-        self.win = None
-        self.disconnected = None
-        self.turns = 0
+        self.flag = None
+
 
     def recv_data(self):
         """Function for receiving data from the Raspberry Pi server. Decodes a dictionary and loads the values held in their respective variables.
         Has no parameters (except for self); Outputs False if the server disconnects, otherwise outputs None."""
         # We clean the client's held dictionary in order to remove old data in the dictionary
         self.master_dict = {}
-        raw_recv = self.c.recv(1024)
+        try:
+            raw_recv = self.c.recv(1024)
+        except ConnectionAbortedError:
+            return False
+        except ConnectionResetError:
+            return False
+        except BlockingIOError:
+            return None
         if not raw_recv:
             return False
         else:
@@ -343,18 +351,39 @@ class client:
                 self.win = self.master_dict["win"]
             if "disconnected" in self.master_dict:
                 self.disconnected = self.master_dict["disconnected"]
+            if "message" in self.master_dict:
+                self.message = self.master_dict["message"]
+            if "flag" in self.master_dict:
+                self.flag = self.master_dict["flag"]
+            return True
 
     def send_data(self):
         """Function for sending self.master_dict to the server. Has no parameters (except for self); outputs None at all times."""
         # Note that we use protocol 0 in order to guarantee compatibility (errors appeared when the server client was on linux). This
         # can be changed in order to message size, but would require both the client and server code altering to accomodate.
         msgbytes = pickle.dumps(self.master_dict, protocol=0)
-        self.c.send(msgbytes)
+        try:
+            self.c.send(msgbytes)
+        except ConnectionAbortedError or ConnectionResetError:
+            return
 
     def end_connection(self):
         """Function for cleanly shutting down the client connection when someone disconnects. Has no parameters (except for self); outputs None at all times"""
         self.c.shutdown(1)
         self.c.close()
+
+
+
+class Game(Client):
+    def __init__(self):
+        Client.__init__(self)
+        self.board = [["-","-","-"],["-","-","-"],["-","-","-"]]
+        self.player_turn = None
+        self.player_piece = None
+        self.game_no = None
+        self.win = None
+        self.turns = 0
+        self.disconnected = False
 
     def online_game(self):
         """Function for starting an online game with a random player. Has no parameters (except for self); returns an appropriate print statement when a game
@@ -387,7 +416,7 @@ class client:
                 print("It's your turn!")
                 selecting = True
                 while selecting:
-                    choice = input("Enter a number between 1 and 9\n")
+                    choice = input("Enter a number between 1 and 9.\n")
                     if choice == "1":
                             selection = self.board[2][0]
                     elif choice == "2":
@@ -439,5 +468,62 @@ class client:
                 self.master_dict["turns"] = self.turns+1
                 self.send_data()
                 continue
+
+
+class Chat(Client):
+    def __init__(self):
+        Client.__init__(self)
+        self.message = ""
+        self.shutdown = False
+        self.game_no = 0
+
+    def set_username(self):
+        username = input("What would you like your username to be?\n")
+        self.master_dict["username"] = username
+        self.master_dict["game_no"] = self.game_no
+        self.send_data()
+
+    # This code is based off of the "solved_server.py" file provided by Dr. David Croft. This can be found at
+    # https://github.com/covcom/ECU177_sockets
+    def online_chatroom(self):
+        self.c.setblocking(0)
+        self.set_username()
+        self.master_dict = {}
+        try:
+            while True:
+                read, write, error = select.select([self.c],[self.c],[self.c])
+                if read != []:
+                    recv = self.recv_data()
+                    if not recv:
+                        print("Connection to the host was lost. Returning you to the main menu")
+                        raise KeyboardInterrupt
+                    elif recv is None:
+                        pass
+                    elif self.flag:
+                        print("You've used a username that's already been taken. Try again")
+                        self.set_username()
+                    else:
+                        print(self.master_dict["message"])
+                        self.message = ""
+                    self.master_dict = {}
+                    continue
+                if write != []:
+                    msg = input(">")
+                    if msg == "\exit":
+                        print("Taking you back to the main menu")
+                        raise KeyboardInterrupt
+                    elif len(msg) != 0:
+                        self.master_dict["message"] = msg
+                        self.master_dict["game_no"] = self.game_no
+                        self.send_data()
+                    else:
+                        pass
+
+        except KeyboardInterrupt:
+            pass
+        finally:
+            self.end_connection()
+
+
 
 main_menu()
