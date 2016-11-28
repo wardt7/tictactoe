@@ -31,80 +31,117 @@ class Chat:
     in function docstrings
 
     Object Variables:
-        self.connections
+        self.__connections
             Type: list
             This variable contains all of the connections to the server, regardless of why they have connected.
         self.__port
             Type: int
             This variable holds the port number to be used by the server's socket
-        self.server
+        self.__server
             Type: object
             Is a socket object; this opens up communication between the server and the client. Uses the port number
             held in self.__port
-        self.master_dict
+        self.__master_dict
             Type: dict
             This variable is what we send to clients when we communicate with them. The keys are the variables
             we want to send to the target client; the values of the keys are the values held in the variables we
             want to send.
-        self.games
+        self.__games
             Type: list
             This holds lists of games that are currently being played at the moment (with each of those lists
             containing connections that are relevant to the game). NOTE: The first list (at index 0) is reserved
             for the chatroom, and should not be considered as a normal game.
-        self.removals
+        self.__removals
             Type: list
             This holds all of the connections that are to be shut down; if a connection is being read and is found
             in the list, then it is shut down.
 
     """
     def __init__(self, port=12345):
-        self.connections = []
+        self.__connections = []
         self.__port = port
 
-        self.server = socket.socket()         # Create a server socket
-        self.server.bind(('', self.__port))          # Bind to the port
-        self.server.listen(5)                 # Now wait for client connections
+        self.__server = socket.socket()         # Create a server socket
+        self.__server.bind(('', self.__port))          # Bind to the port
+        self.__server.listen(5)                 # Now wait for client connections
 
-        self.master_dict = {}
-        self.games = [[]]
-        self.removals = []
+        self.__master_dict = {}
+        self.__games = [[]]
+        self.__removals = []
 
     def get_port(self):
         """
-        Purpose: Returns the port that is currently being used.
+        Purpose: 
+            Returns the port that is currently being used.
 
-        Arguments: None
+        Arguments: 
+            None
 
-        Returns: self.__port
+        Returns: 
+            self.__port
+
         """
         return self.__port
 
     def shutdown(self):
-        ''' shutdown the server '''
+        '''
+        Purpose:
+            Shutdown the server socket.
 
-        for c in self.connections:
+        Arguments:
+            None
+
+        Modifies:
+            self.__server
+                Tells the server to shutdown and close the connection
+            self.__connections
+                Closes all of the connections in self.__connections
+
+        Returns:
+            None 
+
+         '''
+
+        for c in self.__connections:
             c.close()
 
-        self.server.shutdown(1)
-        self.server.close()
+        self.__server.shutdown(1)
+        self.__server.close()
 
     def poll(self):
-        ''' see if there is anything for the server to do and do it. call poll() reguarly '''
+        ''' 
+        Purpose:
+            Poll the server's socket to see if there is anything to read, and act accordingly
 
-        read, write, error = select.select( self.connections+[self.server], self.connections, self.connections, 0 )
+        Arguments:
+            None
+
+        Modifies:
+            self.__connections
+                Adds connections to it when a new client connects; removes connection when it disconnects
+            self.__games
+                Adds and removes connections when they are in the chatroom. Also removes games from self.__games when one of the players disconnects
+            self.__removals
+                Adds connections to the list when a connection must be removed next time around (due to someone disconnecting from a game)
+            self.__master_dict
+                Adds variables as keys and the value of the variables as the value of their respective keys. This is so that data can be sent to clients.
+
+         '''
+
+        read, write, error = select.select( self.__connections+[self.__server], self.__connections, self.__connections, 0 )
 
         for conn in read:
-            if conn is self.server:                 # new client connecting
+            if conn is self.__server:                 # new client connecting
                 c, addr = conn.accept()
-                self.connections.append(c)            # add to list of open self.connections
+                self.__connections.append(c)            # add to list of open self.__connections
 
                 print('Got connection from {}'.format(addr) )
 
-            elif conn in self.removals:
+            elif conn in self.__removals:
                 # There is a connection to be closed in the removals list
                 print("Disconnected")
-                self.removals.remove(conn)
-                self.connections.remove(conn)
+                self.__removals.remove(conn)
+                self.__connections.remove(conn)
                 conn.close()
 
             else:
@@ -116,110 +153,111 @@ class Chat:
 
                 if not msgbytes:                     # treat empty message as a disconnection
                     print('Disconnected')
-                    for index in range(len(self.games)):
-                        if conn in self.games[index]:
+                    for index in range(len(self.__games)):
+                        if conn in self.__games[index]:
                             if index != 0:
                                 # Obtain the game that has ended
-                                new_remove = self.games[index]
-                                # We set self.games[index] to [] as other games would start to search in the wrong game
-                                self.games[index] = []
+                                new_remove = self.__games[index]
+                                # We set self.__games[index] to [] as other games would start to search in the wrong game
+                                self.__games[index] = []
                                 new_remove.remove(conn)
-                                self.connections.remove(conn)
+                                self.__connections.remove(conn)
                                 try:
                                     # We make sure that the other connection disconnects next time around
-                                    self.removals.append(new_remove[0])
-                                    self.master_dict["disconnected"] = True
+                                    self.__removals.append(new_remove[0])
+                                    self.__master_dict["disconnected"] = True
                                     self.send_data(new_remove[0])
                                 except IndexError:
                                     # There was only 1 person in the game so no-one else to remove
                                     pass
                                 conn.close()
                                 break
-                    for user in self.games[0]:
+                    for user in self.__games[0]:
                         if conn == user[0]:
                             # The connection is in the chatroom so we only remove that connection
-                            self.games[0].remove(user)
-                            self.connections.remove(conn)
+                            self.__games[0].remove(user)
+                            self.__connections.remove(conn)
                             break
 
                 else:
-                    self.master_dict = pickle.loads(msgbytes)
-                    if self.master_dict["game_no"] is None:
+                    self.__master_dict = pickle.loads(msgbytes)
+                    if self.__master_dict["game_no"] is None:
                         # Add the given connection to a game
                         game_no = self.connect_game(conn,1)
-                        self.master_dict["game_no"] = game_no
-                        if len(self.games[game_no]) == 2:
+                        self.__master_dict["game_no"] = game_no
+                        if len(self.__games[game_no]) == 2:
                             # The game is full, start the game
-                            self.master_dict["player_turn"] = "X"
+                            self.__master_dict["player_turn"] = "X"
                             # Tell players their piece, then send them this with who's turn it is
                             for index in range(2):
                                 # The player who's turn it isn't must receive their data first in order to maintain network
                                 # synchronicity (otherwise the game will get "stuck").
                                 if index == 0:
-                                    self.master_dict["player_piece"] = "O"
+                                    self.__master_dict["player_piece"] = "O"
                                 else:
-                                    self.master_dict["player_piece"] = "X"
-                                self.send_data(self.games[game_no][index])
+                                    self.__master_dict["player_piece"] = "X"
+                                self.send_data(self.__games[game_no][index])
                                 print("sent")
-                    elif self.master_dict["game_no"] == 0:
+                    elif self.__master_dict["game_no"] == 0:
                         # The connection is related to the chatroom
-                        if "username" in self.master_dict:
+                        if "username" in self.__master_dict:
                             # A username has been set for the connection
-                            for users in self.games[0]:
-                                if users[1] == self.master_dict["username"]:
+                            for users in self.__games[0]:
+                                if users[1] == self.__master_dict["username"]:
                                     # The username has been taken, send back a flag to say so.
-                                    self.master_dict["flag"] = True
+                                    self.__master_dict["flag"] = True
                                     self.send_data(conn)
                                     continue
-                            self.games[0].append((conn,self.master_dict["username"]))
+                            self.__games[0].append((conn,self.__master_dict["username"]))
                         else:
                             # Get the username of the person who sent the message
                             username = None
-                            for users in self.games[0]:
+                            for users in self.__games[0]:
                                 if conn in users:
                                     username = users[1]
                                     break
                             if username == None:
                                 # We got a message from a connection that doesn't have a username
-                                self.master_dict["flag"] = True
+                                self.__master_dict["flag"] = True
                                 self.send_data(conn)
                                 continue
                             # Send off the message received to other clients, adding the sender's username in the
                             # process.
-                            msg = "{} said: {}".format(username,self.master_dict["message"])
-                            self.master_dict["message"] = msg
-                            for c in self.games[0]:
+                            msg = "{} said: {}".format(username,self.__master_dict["message"])
+                            self.__master_dict["message"] = msg
+                            for c in self.__games[0]:
                                 if c[0] != conn:
                                     self.send_data(c[0])
 
 
                     else:
                         # Connection is already in a game; take the obtained data and analyse it to see if someone has won
-                        board = self.master_dict["board"]
+                        board = self.__master_dict["board"]
                         win = self.win_check(board)
-                        if win != "-" or self.master_dict["turns"] == 9:
+                        if win != "-" or self.__master_dict["turns"] == 9:
                             # We have a final result (winner or draw). Send this to both clients.
-                            self.master_dict["win"] = win
+                            self.__master_dict["win"] = win
                             for index in range(2):
-                                self.send_data(self.games[self.master_dict["game_no"]][index])
+                                self.send_data(self.__games[self.__master_dict["game_no"]][index])
                                 print("sent")
                         else:
-                            if self.master_dict["player_turn"] == "X":
-                                self.master_dict["player_turn"] = "O"
+                            if self.__master_dict["player_turn"] == "X":
+                                self.__master_dict["player_turn"] = "O"
                             else:
-                                self.master_dict["player_turn"] = "X"
-                            self.master_dict["board"] = board
+                                self.__master_dict["player_turn"] = "X"
+                            self.__master_dict["board"] = board
                             # If the client accidentally sends their player_piece we must remove it from the dictionary before sending it to
                             # both clients, otherwise they will have the same piece
-                            self.master_dict.pop("player_piece",None)
+                            self.__master_dict.pop("player_piece",None)
                             for index in range(2):
-                                self.send_data(self.games[self.master_dict["game_no"]][index])
+                                self.send_data(self.__games[self.__master_dict["game_no"]][index])
                     # We clean the client's held dictionary in order to remove old data in the dictionary
-                    self.master_dict = {}
+                    self.__master_dict = {}
 
     def connect_game(self, conn, index):
         """
-        Purpose: Connect a given client to a game
+        Purpose: 
+            Connect a given client to a game
 
         Arguments:
             conn
@@ -230,8 +268,8 @@ class Chat:
                 This is the index of the game we are looking at to see if there is a slot available
 
         Modifies:
-            self.games
-                The function adds the connection to a list in self.games.
+            self.__games
+                The function adds the connection to a list in self.__games.
 
         Returns:
             EITHER:
@@ -241,22 +279,23 @@ class Chat:
 
         """
         try:
-            if len(self.games[index]) < 2:
+            if len(self.__games[index]) < 2:
             # Someone waiting for a game; add new player to game
-                self.games[index].append(conn)
+                self.__games[index].append(conn)
                 return index
             else:
             # Move onto the next game location
                 return self.connect_game(conn,index+1)
         except IndexError:
             # All game locations looked at, no spaces. Start a new game location
-            self.games.append([conn])
+            self.__games.append([conn])
             return index
 
 
     def send_data(self, conn):
         """
-        Purpose: Send data to a client
+        Purpose: 
+            Send data to a client
 
         Arguments:
             conn
@@ -270,13 +309,14 @@ class Chat:
             None.
 
         """
-        msgbytes = pickle.dumps(self.master_dict, protocol=0)
+        msgbytes = pickle.dumps(self.__master_dict, protocol=0)
         conn.send(msgbytes)
 
     def win_check(self, board):
         """
 
-        Purpose: See if someone has won a game of tictactoe when given a board
+        Purpose: 
+            See if someone has won a game of tictactoe when given a board
 
         Arguments:
             board
@@ -345,25 +385,24 @@ class Chat:
             None
 
         """
-        # Obtain the amount of connections, games and people in the chatroom
-        number_connections = len(self.connections)
-        number_chatroom = len(self.games[0])
+        number_connections = len(self.__connections)
+        number_chatroom = len(self.__games[0])
         number_games = 0
         # These lists contain the pins for representing the amount of connections, games and people in the chatroom
         # The first pin represents the most significant binary bit (2^5)
         connections_pinlist = [5,4,3,2,1,0]
         chatroom_pinlist = [11,10,9,8,7,6]
         games_pinlist = [17,16,15,14,13,12]
-        for i in range(len(self.games)):
-            # We look at all of the lists in self.games. If the list we're at isn't the chatroom and is currently
+        for i in range(len(self.__games)):
+            # We look at all of the lists in self.__games. If the list we're at isn't the chatroom and is currently
             # in play, we increase the amount of games there are.
             if i == 0:
                 continue
-            if len(self.games[i]) == 2:
+            if len(self.__games[i]) == 2:
                 number_games += 1
                 print(number_games)
         # Convert our decimal value to a binary string and remove the first 2 characters (As these just represent
-        # that the string is a binary number
+        # that the string is a binary number)
         number_connections = bin(number_connections)[2:]
         number_chatroom = bin(number_chatroom)[2:]
         number_games = bin(number_games)[2:]
@@ -397,7 +436,6 @@ class Chat:
                 piglow.set(games_pinlist[index],100)
             else:
                 piglow.set(games_pinlist[index],0)
-        # Update the piglow module
         piglow.show()
 
 

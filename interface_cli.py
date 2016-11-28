@@ -4,9 +4,16 @@ import pickle, socket, select
 
 
 def main_menu():
-        """Starts the main menu of the game; provides a way of calling individual functions for
-        playing the game, and also handles some operations which don't require additional functions
-        such as exiting the entire game. Has no arguments and always returns None"""
+        """
+        Purpose:
+            Operate the main menu of the program.
+
+        Arguments:
+            None.
+
+        Returns:
+            None.
+        """
         menu_on = True
         while menu_on:
                 print("Hello, welcome to the Tic Tac Toe game. What would you like to do?")
@@ -41,9 +48,20 @@ def main_menu():
         exit()
 
 def local_game(ai=None):
-        """Starts a local 2 player game of tic tac toe. The function should keep running
-        until a winner is found or until 9 turns have elapsed (as after 9 turns there
-        are no more moves available). Has 1 parameter to determine if AI is used. Always returns None."""
+        """
+        Purpose:
+            Operate a game of tictactoe on the client. This is either a 2 player local game, or a 1 player game against an AI.
+
+        Arguments:
+            ai
+                Type: int (sometimes None)
+                Tells the program whether or not we're using an AI. If the value is None then no AI is used; if the value is 1
+                then the hard AI is used.
+
+        Returns:
+            None.
+
+        """
         board = [["-","-","-"],["-","-","-"],["-","-","-"]]
         player_one = ai is None
         turns = 0
@@ -147,9 +165,27 @@ def local_game(ai=None):
 
 
 def win_check(board):
-        """Function to check if win condition reached. Input: board (board is a list containing 3 lists
-        each containing 3 elements. Each element is a "X", "O", or "-".). Output: "X", "O" (representing
-        the winner, Crosses or Noughts respectively), "-" (representing no winner)"""
+        """
+
+        Purpose: 
+            See if someone has won a game of tictactoe when given a board
+
+        Arguments:
+            board
+                Type: list
+                This contains a specifically formatted list that represents the game board.
+                A valid value of this would be [["-","X","O"],["-","X","O"],["-","X","O"]]
+                The string "-" represents a blank space while "X" and "O" represent board pieces.
+                Note that the value of board[2][0] represents the bottom left corner.
+                Likewise, the value of board[0][2] represents the top right corner.
+
+        Returns:
+            One of the following:
+                "-" if there is no winner
+                "X" if X is the winner
+                "O" if O is the winner
+
+        """
         for co_ord_y in range(3):
             for co_ord_x in range(3):
                 # iterates through every section of the board
@@ -185,9 +221,27 @@ def win_check(board):
         return "-"
 
 def ai_hard(board, ai_piece):
-        """This function contains the code for the hardest AI in the game. I (Toby) originally got the idea from a Numberphile video explaining minimax.
-        The function looks ahead to the next move at all of the possible moves available, and using a heuristic algorithm analyzes whether or not
-        the move is good. Requires one input, board, which is the current game board. Outputs the location where the AI's move is to be placed."""
+        """
+        Purpose:
+            A function for operating a hard AI. The algorithm is loosely based on "MiniMax" with heuristic analysis.
+
+        Arguments:
+            board
+                Type: list
+                This contains a specifically formatted list that represents the game board.
+                A valid value of this would be [["-","X","O"],["-","X","O"],["-","X","O"]]
+                The string "-" represents a blank space while "X" and "O" represent board pieces.
+                Note that the value of board[2][0] represents the bottom left corner.
+                Likewise, the value of board[0][2] represents the top right corner.
+            ai_piece
+                Type: string (char)
+                This is a single character which represents the piece that the ai is using. Should either
+                be "X" or "O"
+
+        Returns:
+            A tuple, holding the location of where the AI wants to place its piece. The first element is the Y co-ord, the second element the X co-ord
+
+        """
         # The first element in selection holds the rating of the current best move so that the current best move can be checked against other moves
         # during analysis. The second and third elements hold the Y and X co-ordinates respectively.
         selection = [None,None,None]
@@ -206,11 +260,30 @@ def ai_hard(board, ai_piece):
                         board[co_ord_y][co_ord_x] = "-"
                 else:
                     pass
-        return [selection[1],selection[2]]
+        return (selection[1],selection[2])
 
 def ai_hard_heuristic(board, ai_piece):
-        """This function is the heuristic algorithm for ai_hard. It takes one input, board, which is an adjusted game board from the ai_hard function.
-        The function outputs a rating (as an integer) for the given board."""
+        """
+        Purpose:
+            For a given game board, analyse how good the move the ai made was
+
+        Arguments:
+            board
+                Type: list
+                This contains a specifically formatted list that represents the game board.
+                A valid value of this would be [["-","X","O"],["-","X","O"],["-","X","O"]]
+                The string "-" represents a blank space while "X" and "O" represent board pieces.
+                Note that the value of board[2][0] represents the bottom left corner.
+                Likewise, the value of board[0][2] represents the top right corner.
+            ai_piece
+                Type: string (char)
+                This is a single character which represents the piece that the ai is using. Should either
+                be "X" or "O"
+
+        Returns:
+            The "rating" of a board. Always an integer number
+
+        """
         rating = 0
         for co_ord_y in range(3):
             for co_ord_x in range(3):
@@ -281,7 +354,17 @@ def ai_hard_heuristic(board, ai_piece):
         return rating
 
 def show_instructions():
-    """Loads the rules and instructions of the Tic Tac Toe game"""
+    """
+    Purpose:
+        Show instructions for how to play Tic Tac Toe
+
+    Arguments:
+        None
+
+    Returns:
+        None
+
+    """
     print("Hello and welcome to Tic Tac Toe")
     print("When you have started up a game, you will enter numbers 1-9")
     print("The numbers represent the squares of the Tic Tac Toe board")
@@ -295,7 +378,19 @@ def show_instructions():
     print("Have fun playing!")
 
 def XorOPlayer():
-    """Function for selecting what piece to play as in local games. Has no parameters; outputs True if player 1 is X, otherwise outputs False """
+    """
+    Purpose:
+        Ask a player whether or not they want to play as "X" or as "O"
+
+    Arguments:
+        None
+
+    Returns:
+        EITHER:
+            True if player 1 wants to use X
+        OR: 
+            False if player 1 wants to use O
+    """
     while True:
         player1 = input("---|Player 1/Human, would you like to be X or O|--: ")
         if player1 =='X':
@@ -308,24 +403,72 @@ def XorOPlayer():
 # The following code is based off a file called "lab_getting_started_client.py",
 # which is available at https://github.com/covcom/ECU177_sockets
 class Client:
-    """Class for creating client objects for connecting to a Raspberry Pi server to play games and join a chatroom"""
+    """
+    This is a class for handling the users connection to the server. It contains functions for:
+
+        1. Sending data to the server via a pickled dictionary
+        2. Receiving and decoding a pickled dictionary, and unpackig the data so that variables are loaded with new data
+        3. Ending the connection with the server cleanly
+
+    All functions are object methods and as such all have the argument self; this argument will not be referred to
+    in function docstrings
+
+    Object Variables:
+        self.__port
+            Type: int
+            This variable holds the port number to be used by the server's socket
+        self.__c
+            Type: object
+            Is a socket object; this opens up communication between the client and the server. Uses the port number
+            held in self.__port
+        self.__master_dict
+            Type: dict
+            This variable is what we send to the server when we communicate with it. The keys are the variables
+            we want to send to the target server; the values of the keys are the values held in the variables we
+            want to send.
+        self.__flag
+            Type: bool (sometimes None)
+            This variable can be used as a warning signal from the server; whilst it is currently used only in the subclass
+            Chat for alerting us when a username has been taken, it is intended for wider spread use in the future (for example,
+            when validity checks are transferred from the client to the server, it will be used there to alert the client of an
+            invalid move.)
+
+    Note that this code is based on a file called "lab_getting_started_client.py", authored by Dr. David Croft. Available at
+    https://github.com/covcom/ECU177_sockets
+
+
+    """
     def __init__(self):
-        """Function for initialising the client."""
         self.__port = 12345
-        self.c = socket.socket()
-        self.c.connect(("169.254.247.73",self.__port))
-        # self.master_dict is used to transfer variables and the data held in them between the client and the server.
-        self.master_dict = {}
-        self.flag = None
+        self.__c = socket.socket()
+        self.__c.connect(("10.0.87.77",self.__port))
+        self.__master_dict = {}
+        self.__flag = None
 
 
     def recv_data(self):
-        """Function for receiving data from the Raspberry Pi server. Decodes a dictionary and loads the values held in their respective variables.
-        Has no parameters (except for self); Outputs False if the server disconnects, otherwise outputs None."""
-        # We clean the client's held dictionary in order to remove old data in the dictionary
-        self.master_dict = {}
+        """
+        Purpose:
+            Receive data from the server and unpack it into a given set of variables
+
+        Arguments:
+            None
+
+        Modifies:
+            self.__board, self.__player_turn, self.__game_no, self.__turns, self.__player_piece,self.__win, self.__disconnected, self.__message, self.__flag
+                If one of these variables is in self.__master_dict, then we load the respective data into the variable
+
+        Returns:
+            True if we successfully receive and unpack data
+
+            False if we have lost the connection to the server
+
+            None if we receive a blocking error (i.e. nothing to read but not because of a disconnection)
+
+        """
+        self.__master_dict = {}
         try:
-            raw_recv = self.c.recv(1024)
+            raw_recv = self.__c.recv(1024)
         except ConnectionAbortedError:
             return False
         except ConnectionResetError:
@@ -336,81 +479,175 @@ class Client:
             return False
         else:
             # Decode the received message to obtain a dictionary; load the values into their respective variables
-            self.master_dict = pickle.loads(raw_recv)
-            if "board" in self.master_dict:
-                self.board = self.master_dict["board"]
-            if "player_turn" in self.master_dict:
-                self.player_turn = self.master_dict["player_turn"]
-            if "game_no" in self.master_dict:
-                self.game_no = self.master_dict["game_no"]
-            if "turns" in self.master_dict:
-                self.turns = self.master_dict["turns"]
-            if "player_piece" in self.master_dict:
-                self.player_piece = self.master_dict["player_piece"]
-            if "win" in self.master_dict:
-                self.win = self.master_dict["win"]
-            if "disconnected" in self.master_dict:
-                self.disconnected = self.master_dict["disconnected"]
-            if "message" in self.master_dict:
-                self.message = self.master_dict["message"]
-            if "flag" in self.master_dict:
-                self.flag = self.master_dict["flag"]
+            self.__master_dict = pickle.loads(raw_recv)
+            if "board" in self.__master_dict:
+                self.__board = self.__master_dict["board"]
+            if "player_turn" in self.__master_dict:
+                self.__player_turn = self.__master_dict["player_turn"]
+            if "game_no" in self.__master_dict:
+                self.__game_no = self.__master_dict["game_no"]
+            if "turns" in self.__master_dict:
+                self.__turns = self.__master_dict["turns"]
+            if "player_piece" in self.__master_dict:
+                self.__player_piece = self.__master_dict["player_piece"]
+            if "win" in self.__master_dict:
+                self.__win = self.__master_dict["win"]
+            if "disconnected" in self.__master_dict:
+                self.__disconnected = self.__master_dict["disconnected"]
+            if "message" in self.__master_dict:
+                self.__message = self.__master_dict["message"]
+            if "flag" in self.__master_dict:
+                self.__flag = self.__master_dict["flag"]
             return True
 
     def send_data(self):
-        """Function for sending self.master_dict to the server. Has no parameters (except for self); outputs None at all times."""
-        # Note that we use protocol 0 in order to guarantee compatibility (errors appeared when the server client was on linux). This
-        # can be changed in order to message size, but would require both the client and server code altering to accomodate.
-        msgbytes = pickle.dumps(self.master_dict, protocol=0)
+        """
+        Purpose:
+            Encode self.__master_dict and send it to the server for processing.
+
+        Arguments:
+            None
+
+        Returns:
+            None
+        """
+        msgbytes = pickle.dumps(self.__master_dict, protocol=0)
         try:
-            self.c.send(msgbytes)
-        except ConnectionAbortedError or ConnectionResetError:
+            self.__c.send(msgbytes)
+        except ConnectionAbortedError:
+            return
+        except ConnectionResetError:
             return
 
     def end_connection(self):
-        """Function for cleanly shutting down the client connection when someone disconnects. Has no parameters (except for self); outputs None at all times"""
-        self.c.shutdown(1)
-        self.c.close()
+        """
+        Purpose:
+            Run the functions for shutting down the connection between the client and the server
+            
+        Arguments:
+            None
+
+        Modifies:
+            self.__c
+                Ends the connection between the client and the server
+
+        Returns:
+            None
+        """
+        self.__c.shutdown(1)
+        self.__c.close()
 
 
 
 class Game(Client):
+    """
+    This is a class specifically designed for running an online game between this client and another client via a server. It is a subclass of Client. It contains functions for:
+
+        1. Running the online game loop.
+
+    All functions are object methods and as such all have the argument self; this argument will not be referred to
+    in function docstrings
+
+    Object Arguments:
+        self.__board
+            Type: list
+            This contains a specifically formatted list that represents the game board.
+            A valid value of this would be [["-","X","O"],["-","X","O"],["-","X","O"]]
+            The string "-" represents a blank space while "X" and "O" represent board pieces.
+            Note that the value of board[2][0] represents the bottom left corner.
+            Likewise, the value of board[0][2] represents the top right corner.
+
+        self.__player_turn
+            Type: string (char), sometimes None
+            This contains a single character ("X" or "O") that represents who's turn it is to make a move
+
+        self.__player_piece
+            Type: string (char), sometimes None
+            This contains a single character ("X" or "O") which is this client's playing piece
+
+        self.__game_no
+            Type: int, sometimes None
+            This contains the number of the game which the client is in. It is always sent in the master_dictionary when communicating with the server
+
+        self.__win
+            Type: String (char), sometimes None
+            This contains a string which represents the winner when the winner is found. Is "X" or "O" when X or O have won respectively, or "-" when it is
+            a draw
+        
+        self.__disconnected
+            Type: bool
+            Is True when the client has disconnected from the server.
+
+
+
+    """
     def __init__(self):
         Client.__init__(self)
-        self.board = [["-","-","-"],["-","-","-"],["-","-","-"]]
-        self.player_turn = None
-        self.player_piece = None
-        self.game_no = None
-        self.win = None
-        self.turns = 0
-        self.disconnected = False
+        self.__board = [["-","-","-"],["-","-","-"],["-","-","-"]]
+        self.__player_turn = None
+        self.__player_piece = None
+        self.__game_no = None
+        self.__win = None
+        self.__turns = 0
+        self.__disconnected = False
 
     def online_game(self):
-        """Function for starting an online game with a random player. Has no parameters (except for self); returns an appropriate print statement when a game
-        ends."""
+        """
+        Purpose:
+            Play a game of tic-tac-toe with another computer via a server by sending and receiving data in the form of an encoded dictionary
+
+        Arguments:
+            None
+
+        Modifies:
+            self.__board
+                The state of this list changes when a player makes a move.
+
+            self.__player_turn
+                Changes when it is the other player's turn to make a move
+
+            self.__game_no
+                Changes when connecting to the game that the client has been put in
+
+            self.__player_piece
+                Changes when connecting to the board piece that has been assigned to it by the server
+
+            self.__win
+                Changes when a winner has been found
+
+            self.__turns
+                Increments by 1 after each turn
+
+            self.__disconnected
+                Becomes True when the client has disconnected unexpectedly from the server
+
+        Returns:
+            None (although print statements are run when returning)
+
+        """
         print("Connecting you to a random online game")
-        # The value of self.game_no is None; the server recognises this as a request to join a game, and allocates a game to the connection
-        self.master_dict["game_no"] = self.game_no
+        # The value of self.__game_no is None; the server recognises this as a request to join a game, and allocates a game to the connection
+        self.__master_dict["game_no"] = self.__game_no
         self.send_data()
         while True:
             # Obtain the latest data from the server at the start of each loop, then display the new board to the user
             result = self.recv_data()
-            print("You are in game: {}. Your piece is: {}".format(self.game_no, self.player_piece))
-            print(self.board[0])
-            print(self.board[1])
-            print(self.board[2])
-            if result == False or self.disconnected:
-                # Note: result == False is True when the server disconnects; self.disconnected is True when the opponent disconnects
+            print("You are in game: {}. Your piece is: {}".format(self.__game_no, self.__player_piece))
+            print(self.__board[0])
+            print(self.__board[1])
+            print(self.__board[2])
+            if result == False or self.__disconnected:
+                # Note: result == False is True when the server disconnects; self.__disconnected is True when the opponent disconnects
                 self.end_connection()
                 return print("You or your opponent disconnected from the server. Returning you to the main menu")
-            elif self.win is not None:
+            elif self.__win is not None:
                 # A final result has been determined, end the game
                 self.end_connection()
-                if self.win != "-":
-                    return print("{} is the winner! Returning you to the main menu.".format(self.win))
+                if self.__win != "-":
+                    return print("{} is the winner! Returning you to the main menu.".format(self.__win))
                 else:
                     return print("It's a draw! Returning you to the main menu.")
-            elif self.player_turn != self.player_piece:
+            elif self.__player_turn != self.__player_piece:
                 print("It's the other player's turn!")
             else:
                 print("It's your turn!")
@@ -418,103 +655,142 @@ class Game(Client):
                 while selecting:
                     choice = input("Enter a number between 1 and 9.\n")
                     if choice == "1":
-                            selection = self.board[2][0]
+                            selection = self.__board[2][0]
                     elif choice == "2":
-                            selection = self.board[2][1]
+                            selection = self.__board[2][1]
                     elif choice == "3":
-                            selection = self.board[2][2]
+                            selection = self.__board[2][2]
                     elif choice == "4":
-                            selection = self.board[1][0]
+                            selection = self.__board[1][0]
                     elif choice == "5":
-                            selection = self.board[1][1]
+                            selection = self.__board[1][1]
                     elif choice == "6":
-                            selection = self.board[1][2]
+                            selection = self.__board[1][2]
                     elif choice == "7":
-                            selection = self.board[0][0]
+                            selection = self.__board[0][0]
                     elif choice == "8":
-                            selection = self.board[0][1]
+                            selection = self.__board[0][1]
                     elif choice == "9":
-                            selection = self.board[0][2]
+                            selection = self.__board[0][2]
                     else:
                             print("That was invalid")
                             continue
                     if selection == "-":
                         if choice == "1":
-                                self.board[2][0] = self.player_piece
+                                self.__board[2][0] = self.__player_piece
                         elif choice == "2":
-                                self.board[2][1] = self.player_piece
+                                self.__board[2][1] = self.__player_piece
                         elif choice == "3":
-                                self.board[2][2] = self.player_piece
+                                self.__board[2][2] = self.__player_piece
                         elif choice == "4":
-                                self.board[1][0] = self.player_piece
+                                self.__board[1][0] = self.__player_piece
                         elif choice == "5":
-                                self.board[1][1] = self.player_piece
+                                self.__board[1][1] = self.__player_piece
                         elif choice == "6":
-                                self.board[1][2] = self.player_piece
+                                self.__board[1][2] = self.__player_piece
                         elif choice == "7":
-                                self.board[0][0] = self.player_piece
+                                self.__board[0][0] = self.__player_piece
                         elif choice == "8":
-                                self.board[0][1] = self.player_piece
+                                self.__board[0][1] = self.__player_piece
                         else:
-                                self.board[0][2] = self.player_piece
+                                self.__board[0][2] = self.__player_piece
                         selecting = False
                     else:
                             print("Invalid move, try again")
                             continue
                 # Load in the newly adjusted variables into the master dictionary and send to the server
-                self.master_dict["board"] = self.board
-                self.master_dict["game_no"] = self.game_no
-                self.master_dict["player_turn"] = self.player_turn
-                self.master_dict["turns"] = self.turns+1
+                self.__master_dict["board"] = self.__board
+                self.__master_dict["game_no"] = self.__game_no
+                self.__master_dict["player_turn"] = self.__player_turn
+                self.__master_dict["turns"] = self.__turns+1
                 self.send_data()
                 continue
 
 
 class Chat(Client):
+    """
+    This class is used to connect and manage a connection to the chatroom run by a server. It is a subclass of Client. It has functions for:
+
+        1. Setting the client's username
+        2. Running the connection to the chatroom
+
+    All functions are object methods and as such all have the argument self; this argument will not be referred to
+    in function docstrings
+
+    Object Variables include:
+        self.__game_no
+            Type: int (constant)
+            Is always 0; indicates to the server that the client is in the chat room.
+    """
     def __init__(self):
         Client.__init__(self)
-        self.message = ""
-        self.shutdown = False
-        self.game_no = 0
+        self.__game_no = 0
 
     def set_username(self):
+        """
+        Purpose:
+            Set the username of the client and send this information to the server
+
+        Arguments:
+            None
+
+        Returns:
+            None
+        """
         username = input("What would you like your username to be?\n")
-        self.master_dict["username"] = username
-        self.master_dict["game_no"] = self.game_no
+        self.__master_dict["username"] = username
+        self.__master_dict["game_no"] = self.__game_no
         self.send_data()
 
     # This code is based off of the "solved_server.py" file provided by Dr. David Croft. This can be found at
     # https://github.com/covcom/ECU177_sockets
     def online_chatroom(self):
-        self.c.setblocking(0)
+        """
+        Purpose:
+            Manage the general running of the chatroom
+
+        Arguments:
+            None
+
+        Returns:
+            None
+
+        This code is based off of the "solved_server.py" file provided by Dr. David Croft. This can be found at
+        https://github.com/covcom/ECU177_sockets  # This code is based off of the "solved_server.py" file provided by Dr. David Croft. This can be found at
+        https://github.com/covcom/ECU177_sockets
+        """
+        # Set the socket so that when there is nothing to read we get a blocking error
+        self.__c.setblocking(0)
         self.set_username()
-        self.master_dict = {}
+        self.__master_dict = {}
         try:
             while True:
-                read, write, error = select.select([self.c],[self.c],[self.c])
+                read, write, error = select.select([self.__c],[self.__c],[self.__c])
                 if read != []:
+                    # We have something to read, obtain that data and handle it.
                     recv = self.recv_data()
                     if not recv:
                         print("Connection to the host was lost. Returning you to the main menu")
                         raise KeyboardInterrupt
                     elif recv is None:
                         pass
-                    elif self.flag:
+                    elif self.__flag:
                         print("You've used a username that's already been taken. Try again")
                         self.set_username()
                     else:
-                        print(self.master_dict["message"])
-                        self.message = ""
-                    self.master_dict = {}
+                        print(self.__master_dict["message"])
+                    self.__master_dict = {}
                     continue
                 if write != []:
+                    # We can write to the server, allow the user to input something if they want to and send it if they have inputted something
                     msg = input(">")
                     if msg == "\exit":
+                        # The user wishes to end the connection with the server
                         print("Taking you back to the main menu")
                         raise KeyboardInterrupt
                     elif len(msg) != 0:
-                        self.master_dict["message"] = msg
-                        self.master_dict["game_no"] = self.game_no
+                        self.__master_dict["message"] = msg
+                        self.__master_dict["game_no"] = self.__game_no
                         self.send_data()
                     else:
                         pass
