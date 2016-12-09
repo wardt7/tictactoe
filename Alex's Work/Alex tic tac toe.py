@@ -33,7 +33,7 @@ def main_menu():
             menu_on = False
         else:
             print("That wasn't a valid option, please choose again")
-    exit()
+exit()
         
 board = [["-","-","-"],["-","-","-"],["-","-","-"]]  
 
@@ -214,22 +214,24 @@ def computer_game():
                     if turns == 9:
                         return print("This game is a tie")
                     else:
-                        player_one = not player_one
-                        computer_choice()
-   
+                        human_player = not human_player
+                        
+                        while human_player = not human_player:
+    
+                            if selection == "-":
+                                AI_choice = board[2][0] or board[2][1] or board[2][2]
+                                AI_choice = board[1][0] or board[1][1] or board[1][2]
+                                AI_choice = board[0][0] or board[0][1] or board[0][2]
+                            else:
+                                None
+                                continue
+                                                
              else:
                 print("That move is invalid, choose again")
-                
+                continue
             
                 
-def computer_choice():
-    if selection == "-":
-        AI_choice = board[2][0] or board[2][1] or board[2][2]
-        AI_choice = board[1][0] or board[1][1] or board[1][2]
-        AI_choice = board[0][0] or board[0][1] or board[0][2]
-    else:
-        None
-    
+
                     
             
            
